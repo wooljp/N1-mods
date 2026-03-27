@@ -1,0 +1,355 @@
+name: Advanced Auto Unzip
+
+on:
+  push:
+    paths:
+      - '**.zip'
+  workflow_dispatch:
+    inputs:
+      zip_file:
+        description: 'Path to zip file to extract'
+        required: true
+        default: 'upload.zip'
+      cleanup_original:
+        description: 'Remove original zip files after extraction'
+        required: false
+        type: boolean
+        default: true
+      extract_subdirs:
+        description: 'Extract into subdirectories (zipname/)'
+        required: false
+        type: boolean
+        default: true
+
+env:
+  EXTRACT_DIR: extracted_files
+  MAX_ZIP_SIZE: 100 # MB
+
+jobs:
+  validate-and-extract:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      run: |
+        npm install -g yauzl
+        npm install -g archiver
+        
+    - name: Find zip files
+      id: find-zips
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          echo "zip_files=${{ github.event.inputs.zip_file }}" >> $GITHUB_OUTPUT
+        else
+          zip_files=$(find . -name "*.zip" -type f | tr '\n' ' ' | sed 's/ $//')
+          echo "zip_files=$zip_files" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Validate zip files
+      id: validate
+      run: |
+        # Node.jsスクリプトでZIPファイルを検証
+        node <<'EOF'
+        const fs = require('fs');
+        const path = require('path');
+        const yauzl = require('yauzl');
+        
+        function validateZip(zipPath) {
+          return new Promise((resolve) => {
+            const stats = fs.statSync(zipPath);
+            const sizeMB = stats.size / (1024 * 1024);
+            
+            // サイズチェック
+            if (sizeMB > process.env.MAX_ZIP_SIZE) {
+              resolve({
+                valid: false,
+                error: `File too large: ${sizeMB.toFixed(2)}MB (max: ${process.env.MAX_ZIP_SIZE}MB)`
+              });
+              return;
+            }
+            
+            // ZIP形式チェック
+            yauzl.open(zipPath, { lazyEntries: true }, (err, zipfile) => {
+              if (err) {
+                resolve({ valid: false, error: 'Invalid ZIP format' });
+                return;
+              }
+              
+              zipfile.readEntry();
+              zipfile.on('entry', (entry) => {
+                if (/\/$/.test(entry.fileName)) {
+                  zipfile.readEntry();
+                } else {
+                  // ファイルエントリを検証
+                  if (entry.fileName.includes('..') || entry.fileName.startsWith('/')) {
+                    zipfile.close();
+                    resolve({ valid: false, error: 'Unsafe file path detected' });
+                    return;
+                  }
+                  zipfile.readEntry();
+                }
+              });
+              
+              zipfile.on('end', () => {
+                zipfile.close();
+                resolve({ valid: true, fileCount: zipfile.entryCount });
+              });
+              
+              zipfile.on('error', (err) => {
+                resolve({ valid: false, error: err.message });
+              });
+            });
+          });
+        }
+        
+        async function main() {
+          const zipFiles = process.env.ZIP_FILES ? process.env.ZIP_FILES.split(' ') : [];
+          const results = [];
+          
+          for (const zipFile of zipFiles) {
+            if (fs.existsSync(zipFile)) {
+              const result = await validateZip(zipFile);
+              results.push({ file: zipFile, ...result });
+            }
+          }
+          
+          // GitHub Actions出力
+          console.log(`::set-output name=validation_results::${JSON.stringify(results)}`);
+          
+          // 結果表示
+          console.log('🔍 ZIP Validation Results:');
+          results.forEach(result => {
+            const status = result.valid ? '✅' : '❌';
+            console.log(`${status} ${result.file}`);
+            if (!result.valid) {
+              console.log(`   Error: ${result.error}`);
+            } else {
+              console.log(`   Files: ${result.fileCount}`);
+            }
+          });
+          
+          // 無効なファイルがあればエラーで終了
+          const invalidFiles = results.filter(r => !r.valid);
+          if (invalidFiles.length > 0) {
+            process.exit(1);
+          }
+        }
+        
+        main().catch(console.error);
+        EOF
+      env:
+        ZIP_FILES: ${{ steps.find-zips.outputs.zip_files }}
+        
+    - name: Extract files with Node.js
+      id: extract
+      run: |
+        # Node.jsで高度な展開処理
+        node <<'EOF'
+        const fs = require('fs');
+        const path = require('path');
+        const yauzl = require('yauzl');
+        
+        function extractZip(zipPath, extractDir) {
+          return new Promise((resolve, reject) => {
+            const zipName = path.basename(zipPath, '.zip');
+            const targetDir = process.env.EXTRACT_SUBDIRS === 'true' 
+              ? path.join(extractDir, zipName)
+              : extractDir;
+            
+            fs.mkdirSync(targetDir, { recursive: true });
+            
+            yauzl.open(zipPath, { lazyEntries: true }, (err, zipfile) => {
+              if (err) {
+                reject(err);
+                return;
+              }
+              
+              let extractedCount = 0;
+              const extractedFiles = [];
+              
+              zipfile.readEntry();
+              
+              zipfile.on('entry', (entry) => {
+                if (/\/$/.test(entry.fileName)) {
+                  // ディレクトリ
+                  const fullPath = path.join(targetDir, entry.fileName);
+                  fs.mkdirSync(fullPath, { recursive: true });
+                  zipfile.readEntry();
+                } else {
+                  // ファイル
+                  const fullPath = path.join(targetDir, entry.fileName);
+                  const dir = path.dirname(fullPath);
+                  
+                  fs.mkdirSync(dir, { recursive: true });
+                  
+                  zipfile.openReadStream(entry, (err, readStream) => {
+                    if (err) {
+                      reject(err);
+                      return;
+                    }
+                    
+                    readStream.pipe(fs.createWriteStream(fullPath));
+                    readStream.on('end', () => {
+                      extractedFiles.push(entry.fileName);
+                      extractedCount++;
+                      zipfile.readEntry();
+                    });
+                  });
+                }
+              });
+              
+              zipfile.on('end', () => {
+                zipfile.close();
+                resolve({
+                  success: true,
+                  extractedCount,
+                  extractedFiles,
+                  targetDir
+                });
+              });
+              
+              zipfile.on('error', (err) => {
+                reject(err);
+              });
+            });
+          });
+        }
+        
+        async function main() {
+          const zipFiles = process.env.ZIP_FILES ? process.env.ZIP_FILES.split(' ') : [];
+          const extractDir = process.env.EXTRACT_DIR;
+          const results = [];
+          
+          for (const zipFile of zipFiles) {
+            if (fs.existsSync(zipFile)) {
+              try {
+                const result = await extractZip(zipFile, extractDir);
+                results.push({ file: zipFile, ...result });
+                console.log(`✅ Extracted: ${zipFile} (${result.extractedCount} files)`);
+              } catch (error) {
+                console.error(`❌ Failed to extract ${zipFile}:`, error.message);
+                results.push({ file: zipFile, success: false, error: error.message });
+              }
+            }
+          }
+          
+          // GitHub Actions出力
+          console.log(`::set-output name=extraction_results::${JSON.stringify(results)}`);
+          
+          // サマリー
+          const successful = results.filter(r => r.success).length;
+          const totalFiles = results.reduce((sum, r) => sum + (r.extractedCount || 0), 0);
+          
+          console.log(`\\n📊 Extraction Summary:`);
+          console.log(`Successful: ${successful}/${results.length}`);
+          console.log(`Total files: ${totalFiles}`);
+        }
+        
+        main().catch(console.error);
+        EOF
+      env:
+        ZIP_FILES: ${{ steps.find-zips.outputs.zip_files }}
+        EXTRACT_SUBDIRS: ${{ github.event.inputs.extract_subdirs || 'true' }}
+        
+    - name: Commit extracted files
+      if: steps.extract.outputs.extraction_results != ''
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        
+        # 展開ファイルを追加
+        git add extracted_files/
+        
+        # 変更をコミット
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+        else
+          commit_msg="Auto-extract: $(date '+%Y-%m-%d %H:%M:%S')"
+          git commit -m "$commit_msg"
+          git push
+          echo "✅ Committed extracted files"
+        fi
+        
+    - name: Clean up original files
+      if: >
+        github.event.inputs.cleanup_original == 'true' || 
+        (github.event_name == 'push' && github.event.inputs.cleanup_original != 'false')
+      run: |
+        # 元のZIPファイルを削除
+        for zip_file in ${{ steps.find-zips.outputs.zip_files }}; do
+          if [ -f "$zip_file" ]; then
+            echo "🗑️ Removing: $zip_file"
+            rm "$zip_file"
+          fi
+        done
+        
+        # クリーンアップをコミット
+        git add -A
+        if git diff --staged --quiet; then
+          echo "No cleanup changes"
+        else
+          git commit -m "🧹 Clean up original zip files"
+          git push
+          echo "✅ Cleaned up original files"
+        fi
+        
+    - name: Create detailed summary
+      run: |
+        # 展開結果の詳細サマリーを作成
+        cat << 'SUMMARY' >> $GITHUB_STEP_SUMMARY
+        ## 🚀 Advanced Auto Unzip Results
+        
+        ### 📦 Extraction Details
+        SUMMARY
+        
+        # 展開結果をJSONから取得して表示
+        if [ -n "${{ steps.extract.outputs.extraction_results }}" ]; then
+          echo '${{ steps.extract.outputs.extraction_results }}' | node -e "
+            const results = JSON.parse(require('fs').readFileSync(0, 'utf8'));
+            results.forEach(r => {
+              const status = r.success ? '✅' : '❌';
+              console.log('### ' + status + ' ' + r.file);
+              if (r.success) {
+                console.log('- **Files extracted:** ' + r.extractedCount);
+                console.log('- **Target directory:** ' + r.targetDir);
+                if (r.extractedFiles.length > 0) {
+                  console.log('- **Sample files:**');
+                  r.extractedFiles.slice(0, 5).forEach(f => {
+                    console.log('  - ' + f);
+                  });
+                  if (r.extractedFiles.length > 5) {
+                    console.log('  - ... and ' + (r.extractedFiles.length - 5) + ' more');
+                  }
+                }
+              } else {
+                console.log('- **Error:** ' + r.error);
+              }
+              console.log('');
+            });
+          "
+        fi
+        
+        cat << 'SUMMARY' >> $GITHUB_STEP_SUMMARY
+        
+        ### ⚙️ Configuration
+        - **Extract subdirectories:** ${{ github.event.inputs.extract_subdirs || 'true' }}
+        - **Cleanup original files:** ${{ github.event.inputs.cleanup_original || 'true' }}
+        - **Max file size:** ${{ env.MAX_ZIP_SIZE }}MB
+        
+        ### 🔧 Trigger
+        - **Event:** ${{ github.event_name }}
+        - **Branch:** ${{ github.ref_name }}
+        SUMMARY
