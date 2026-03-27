@@ -1,0 +1,50 @@
+services:
+- type: web
+  name: chocochat-multi-db
+  runtime: node
+  buildCommand: npm install
+  startCommand: node index.js
+  envVars:
+    - key: NODE_VERSION
+      value: 20
+    - key: NODE_ENV
+      value: production
+    - key: PORT
+      value: 10000
+    
+    # Multi-database configuration
+    # Account management database (TiDB MySQL) - Required for authentication
+    - key: ACCOUNT_DATABASE_URL
+      value: mysql://3RuJearhG6mBc5U.root:I9Zv1Xm2CJPdkU9v@gateway01.ap-northeast-1.prod.aws.tidbcloud.com:4000/test?ssl={"rejectUnauthorized":true}
+    
+    # Message management database (Optional - will use memory fallback if not set)
+    # - key: MESSAGE_DATABASE_URL
+    #   sync: false # Will be set by Render's PostgreSQL add-on (optional)
+      
+    # Admin passwords
+    - key: ADMIN_PASSWORD
+      value: admin-user-pass=version1-iwyegv
+    - key: PASS_BANANA
+      value: bananananana
+    - key: PASS_CHOCOWAKAME
+      value: wakametube=banana
+    - key: PASS_BANANA_LEFT
+      value: ばななの右腕だよ♡
+    - key: PASS_BANANA_RIGHT
+      value: ばななの左腕だよ☆
+    - key: PASS_WOOLISBEST_PLUS
+      value: html-astroid=gg
+    - key: PASS_WOOLISBEST
+      value: woolisbest=html-astroid=gg
+    - key: PASS_YOSSHY
+      value: thisismypassword
+    - key: PASS_AIROU
+      value: aiueo
+  autoDeploy: true
+  healthCheckPath: /health
+
+# Optional PostgreSQL add-on for message storage (comment out if not needed)
+# databases:
+# - name: chocochat-messages
+#   databaseName: chocochat_messages
+#   user: chocochat_user

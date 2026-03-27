@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🍫ちょこちゃっと 管理者版🍫</title>
+  <!-- CSS Files -->
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/themes.css">
+  <link rel="stylesheet" href="css/auth.css">
+  <link rel="stylesheet" href="css/chat.css">
+  <link rel="stylesheet" href="css/admin.css">
+  <link rel="stylesheet" href="css/private.css">
+  <link rel="stylesheet" href="css/ui-separation.css">
+  <link rel="stylesheet" href="css/access-check.css">
+  <link rel="stylesheet" href="css/captcha.css">
+  <link rel="stylesheet" href="css/geoip.css">
+  <!-- JavaScript Files -->
+  <script src="js/multi-storage-auth.js"></script>
+  <script src="js/access-check.js"></script>
+  <script src="js/captcha.js"></script>
+  <script src="js/ui-manager.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/messages.js"></script>
+  <script src="js/private.js"></script>
+  <script src="js/admin.js"></script>
+  <script src="js/chat.js"></script>
+  <script src="js/geoip-manager.js"></script>
+  <script src="js/app.js"></script>
+</head>
+<body class="theme-default admin-show">
+  <!-- Access Check Section -->
+  <div id="access-check" class="auth-container">
+    <div class="access-check-content">
+      <h2>🔐 管理者ページアクセス確認</h2>
+      <div class="access-status" id="access-status">
+        <div class="loading-spinner"></div>
+        <p>アクセス権限を確認中...</p>
+      </div>
+      <div class="access-error" id="access-error" style="display: none;">
+        <h3>⛔ アクセス拒否</h3>
+        <p id="error-message"></p>
+        <div class="error-actions">
+          <button onclick="location.href='/'">一般チャットに戻る</button>
+          <button onclick="location.reload()">再試行</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Authentication Section -->
+  <div id="auth-section" style="display: none;">
+    <div class="auth-container">
+      <h1>🍫ちょこちゃっと 管理者版🍫</h1>
+      <p style="text-align: center; color: #e74c3c; font-weight: bold; margin-bottom: 20px;">管理者専用ログイン</p>
+
+      <!-- Login Form -->
+      <div id="login-form" class="auth-form active">
+        <h3>管理者ログイン</h3>
+        <p class="auth-hint">管理者アカウント情報を入力してください</p>
+        <input type="text" id="loginDisplayName" placeholder="管理者ユーザー名" maxlength="20">
+        <input type="password" id="loginPassword" placeholder="パスワード">
+        <div class="admin-login-option">
+          <label>
+            <input type="checkbox" id="adminLoginCheck" checked>
+            <span>管理者としてログイン</span>
+          </label>
+          <div id="adminPasswordContainer">
+            <input type="password" id="adminPassword" placeholder="管理者パスワード">
+          </div>
+        </div>
+        <button id="loginButton">管理者ログイン</button>
+        <div class="auth-toggle">
+          <a href="/">一般ユーザーログインへ</a>
+        </div>
+      </div>
+
+      <!-- Signup Form -->
+      <div id="signup-form" class="auth-form">
+        <h3>管理者アカウント作成</h3>
+        <p class="auth-hint">新しい管理者アカウントを作成</p>
+        <input type="text" id="signupUsername" placeholder="管理者ユーザー名 (1〜20文字)" maxlength="20">
+        <input type="password" id="signupPassword" placeholder="パスワード (4文字以上)">
+        <input type="password" id="signupPasswordConfirm" placeholder="パスワード (確認)">
+        <button id="signupButton">管理者アカウント作成</button>
+        <div class="auth-toggle">
+          <a href="/">一般ユーザーログインへ</a>
+        </div>
+      </div>
+
+      <div id="auth-error" class="error-message hidden"></div>
+      <div id="auth-success" class="success-message hidden"></div>
+    </div>
+  </div>
+
+  <!-- Chat Container -->
+  <div id="chat-container" class="hidden">
+    <!-- New Message Notice -->
+    <div id="new-message-notice" class="hidden">🍫新着メッセージがあります🍫</div>
+
+    <!-- Chat Header -->
+    <div class="chat-header">
+      <h1>🍫ちょこちゃっと 管理者版🍫</h1>
+      <h2>🍫管理者専用インターフェース🍫</h2>
+    </div>
+
+    <!-- User Info Display -->
+    <div class="user-info-display">
+      🍫管理者ログイン中: <span class="display-name" id="current-display-name"></span>
+      <span id="admin-indicator">管理者</span>
+      <span id="privileged-admin-indicator" class="hidden">特権管理者</span>
+    </div>
+
+    <!-- Online Info -->
+    <div class="online-info">
+      <span>オンライン:</span>
+      <span id="user-count">0人</span>
+      <span id="user-names"></span>
+    </div>
+
+    <!-- Typing Indicator -->
+    <div id="typing-indicator" class="hidden"></div>
+
+    <!-- Chat Box -->
+    <div id="chat-box"></div>
+
+    <!-- Reply Preview -->
+    <div id="reply-preview" class="hidden">
+      <span id="reply-to-text"></span>
+      <button id="cancel-reply">✕</button>
+    </div>
+
+    <!-- Admin Input Area -->
+    <div id="admin-input" class="input-area">
+      <textarea id="message-input-admin" maxlength="200" placeholder="管理者メッセージを入力..."></textarea>
+      <div class="input-controls">
+        <div class="input-hint">Enterで送信 / Shift+Enterで改行</div>
+        <div class="char-count"><span id="char-counter-admin">0</span>/200</div>
+      </div>
+      <div class="button-row">
+        <button id="send-btn-admin">送信</button>
+        <button id="omikuji-btn-admin">おみくじ</button>
+        <button id="toggle-system-messages-admin">入退室通知: 表示</button>
+        <button id="toggle-private-messages-admin">プライベートメッセージ</button>
+        <button id="toggle-admin-panel">管理パネル</button>
+        <div class="logout-container">
+          <button id="logoutButton-admin">ログアウト</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Privileged Admin Input Area -->
+    <div id="privileged-admin-input" class="input-area hidden">
+      <textarea id="message-input-privileged" maxlength="200" placeholder="特権管理者メッセージを入力..."></textarea>
+      <div class="input-controls">
+        <div class="input-hint">Enterで送信 / Shift+Enterで改行</div>
+        <div class="char-count"><span id="char-counter-privileged">0</span>/200</div>
+      </div>
+      <div class="button-row">
+        <button id="send-btn-privileged">送信</button>
+        <button id="omikuji-btn-privileged">おみくじ</button>
+        <button id="toggle-system-messages-privileged">入退室通知: 表示</button>
+        <button id="toggle-private-messages-privileged">プライベートメッセージ</button>
+        <button id="toggle-admin-panel-privileged">管理パネル</button>
+        <button id="toggle-ip-controls">IP管理</button>
+        <div class="logout-container">
+          <button id="logoutButton-privileged">ログアウト</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Panel (always visible for admin interface) -->
+    <div id="admin-panel">
+      <h4>管理パネル</h4>
+      
+      <!-- User Management -->
+      <div class="admin-section">
+        <h5>ユーザー管理</h5>
+        <div class="admin-user-list" id="admin-user-list"></div>
+      </div>
+
+      <!-- Ban Management -->
+      <div class="admin-section">
+        <h5>BAN管理</h5>
+        <button id="ban-user" class="admin-button danger">ユーザーBAN</button>
+        <button id="shadow-ban" class="admin-button danger">シャドウBAN</button>
+        <button id="mute-user" class="admin-button">ユーザーミュート</button>
+        <div class="ban-list" id="ban-list"></div>
+      </div>
+
+      <!-- Message Management -->
+      <div class="admin-section">
+        <h5>メッセージ管理</h5>
+        <button id="delete-all-messages" class="admin-button danger">全メッセージ削除</button>
+        <button id="delete-all-pms" class="admin-button danger">全PM削除</button>
+      </div>
+
+      <!-- System Info -->
+      <div class="admin-section">
+        <h5>システム情報</h5>
+        <button id="system-info" class="admin-button">システム情報表示</button>
+      </div>
+
+      <!-- GeoIP Management -->
+      <div id="geoip-section" class="admin-section">
+        <div class="geoip-header">
+          <h4>🌍 GeoIPアクセス制限</h4>
+          <div class="geoip-controls">
+            <button id="geoip-reload-data" class="geoip-reload-btn">データ再読み込み</button>
+            <button id="geoip-refresh" class="geoip-refresh-btn">更新</button>
+          </div>
+        </div>
+
+        <!-- Current IP Info -->
+        <div class="current-ip-info">
+          <div class="ip-info-item">
+            <div class="ip-info-label">現在のIP</div>
+            <div class="ip-info-value" id="geoip-current-ip">読み込み中...</div>
+          </div>
+          <div class="ip-info-item">
+            <div class="ip-info-label">判定結果</div>
+            <div class="ip-info-value" id="geoip-is-japanese">読み込み中...</div>
+          </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="geoip-stats">
+          <div class="stat-card">
+            <div class="stat-value" id="geoip-total-blocked">0</div>
+            <div class="stat-label">総ブロック数</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="geoip-recent-blocked">0</div>
+            <div class="stat-label">24時間ブロック</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="geoip-currently-blocked">0</div>
+            <div class="stat-label">現在ブロック中</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="geoip-allowed-ips">0</div>
+            <div class="stat-label">許可IP数</div>
+          </div>
+        </div>
+
+        <!-- Privileged Admin IPs -->
+        <div class="privileged-admin-ips-container">
+          <div class="privileged-admin-ips-header">
+            <h5>特権管理者IP（制限除外）</h5>
+            <div class="privileged-count" id="geoip-privileged-count">0</div>
+          </div>
+          <div id="geoip-privileged-admin-ips">
+            <p class="no-data">読み込み中...</p>
+          </div>
+        </div>
+
+        <!-- Proxy/VPN IPs -->
+        <div class="proxy-vpn-ips-container">
+          <div class="proxy-vpn-ips-header">
+            <h5>プロキシ・VPN IP（許可済み）</h5>
+            <div class="proxy-vpn-count" id="geoip-proxy-vpn-count">0</div>
+          </div>
+          <div id="geoip-proxy-vpn-ips">
+            <p class="no-data">読み込み中...</p>
+          </div>
+        </div>
+
+        <!-- IP Management -->
+        <div class="ip-management">
+          <div class="ip-form">
+            <h5>IP許可</h5>
+            <form id="geoip-allow-form">
+              <div class="ip-input-group">
+                <input type="text" id="geoip-allow-input" class="ip-input" placeholder="IPアドレスを入力">
+                <button type="submit" class="ip-submit-btn">許可</button>
+              </div>
+            </form>
+          </div>
+          <div class="ip-form">
+            <h5>IP拒否</h5>
+            <form id="geoip-disallow-form">
+              <div class="ip-input-group">
+                <input type="text" id="geoip-disallow-input" class="ip-input" placeholder="IPアドレスを入力">
+                <button type="submit" class="ip-submit-btn disallow-btn">拒否</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Blocked IPs -->
+        <div class="blocked-ips-container">
+          <div class="blocked-ips-header">
+            <h5>ブロックされたIP（上位10）</h5>
+            <button id="geoip-clear-log" class="clear-log-btn">ログクリア</button>
+          </div>
+          <div id="geoip-blocked-ips">
+            <p class="no-data">読み込み中...</p>
+          </div>
+        </div>
+
+        <!-- Block Reasons -->
+        <div class="block-reasons-container">
+          <div class="block-reasons-header">
+            <h5>ブロック理由</h5>
+          </div>
+          <div id="geoip-block-reasons">
+            <p class="no-data">読み込み中...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile Settings -->
+      <div class="admin-section">
+        <h5>プロフィール設定</h5>
+        <div class="profile-section">
+          <input type="text" id="profile-display-name" placeholder="表示名" class="profile-input">
+          <input type="text" id="profile-status-text" placeholder="ステータスメッセージ" class="profile-input">
+          
+          <div class="theme-selector">
+            <div class="theme-option" data-theme="default">デフォルト</div>
+            <div class="theme-option" data-theme="dark">ダーク</div>
+            <div class="theme-option" data-theme="light">ライト</div>
+            <div class="theme-option" data-theme="blue">ブルー</div>
+          </div>
+          
+          <div class="color-picker">
+            <div class="color-option" data-color="#000000" style="background: #000000;"></div>
+            <div class="color-option" data-color="#e74c3c" style="background: #e74c3c;"></div>
+            <div class="color-option" data-color="#3498db" style="background: #3498db;"></div>
+            <div class="color-option" data-color="#2ecc71" style="background: #2ecc71;"></div>
+            <div class="color-option" data-color="#f39c12" style="background: #f39c12;"></div>
+            <div class="color-option" data-color="#9b59b6" style="background: #9b59b6;"></div>
+          </div>
+          
+          <button id="updateProfileButton" class="admin-button">プロフィール更新</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- IP Controls (Privileged Admin Only) -->
+    <div id="ip-controls" class="hidden">
+      <div class="button-row">
+        <button id="toggleIpListBtn" class="toggle-ip-btn">オンラインユーザーIPを表示</button>
+        <button id="toggleIpHistoryBtn" class="toggle-ip-btn">全ユーザーIP履歴を表示</button>
+      </div>
+    </div>
+
+    <!-- IP List -->
+    <div id="user-ip-list" class="hidden">
+      <h4>【特権管理者専用】オンラインユーザーIPリスト</h4>
+      <div id="ip-list-content"></div>
+    </div>
+
+    <!-- IP History -->
+    <div id="user-ip-history" class="hidden">
+      <h4>【特権管理者専用】全ユーザーIP履歴</h4>
+      <div id="ip-history-content"></div>
+    </div>
+
+    <!-- Private Messages Container -->
+    <div id="private-messages-container">
+      <div class="private-messages-header">
+        <h3 class="private-messages-title">プライベートメッセージ</h3>
+        <button id="close-private-messages">✕</button>
+      </div>
+      
+      <div class="private-message-input-container">
+        <div class="private-message-to">
+          <label>送信先:</label>
+          <input type="text" id="private-message-to" placeholder="ユーザー名">
+        </div>
+        <div class="private-message-input-wrapper">
+          <textarea id="private-message-input" placeholder="プライベートメッセージを入力..."></textarea>
+          <button id="private-message-send">送信</button>
+        </div>
+      </div>
+      
+      <div class="private-messages-content" id="private-messages-content"></div>
+    </div>
+
+    <!-- User List Container -->
+    <div id="user-list-container">
+      <div class="user-list-header">オンラインユーザー</div>
+      <div class="user-list-content" id="user-list-content"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <!-- CSS Files -->
+  <link rel="stylesheet" href="css/captcha.css">
+  <!-- JavaScript Files -->
+  <script src="js/multi-storage-auth.js"></script>
+  <script src="js/captcha.js"></script>
+  <script src="js/ui-manager.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/messages.js"></script>
+  <script src="js/private.js"></script>
+  <script src="js/admin.js"></script>
+  <script src="js/chat.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

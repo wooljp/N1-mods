@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🍫ちょこちゃっと🍫</title>
+  <!-- CSS Files -->
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/themes.css">
+  <link rel="stylesheet" href="css/auth.css">
+  <link rel="stylesheet" href="css/chat.css">
+  <link rel="stylesheet" href="css/admin.css">
+  <link rel="stylesheet" href="css/private.css">
+</head>
+<body class="theme-default">
+  <div id="auth-section">
+    <div class="auth-container">
+      <h1>🍫ちょこちゃっと🍫</h1>
+
+      <div id="login-form" class="auth-form active">
+        <h3>ログイン</h3>
+        <p class="auth-hint">アカウント情報を入力してチャットに参加</p>
+        <input type="text" id="loginDisplayName" placeholder="ユーザー名 (スペース以外は自由)" maxlength="20">
+        <input type="password" id="loginPassword" placeholder="パスワード">
+        <div class="admin-login-option" style="margin: 15px 0; padding: 10px; border: 1px solid #e0e0e0; border-radius: 8px; background: #f9f9f9;">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px;">
+            <input type="checkbox" id="adminLoginCheck" style="width: 18px; height: 18px; cursor: pointer;">
+            <span>管理者としてログイン</span>
+          </label>
+          <div id="adminPasswordContainer" class="hidden" style="margin-top: 10px;">
+            <input type="password" id="adminPassword" placeholder="管理者パスワード" style="width: 100%; padding: 12px; border: 2px solid #e74c3c; border-radius: 8px; font-size: 14px;">
+          </div>
+        </div>
+        <button id="loginButton">ログイン</button>
+        <div class="auth-toggle">
+          アカウントがありませんか？ <a id="showSignup">新規登録</a>
+        </div>
+      </div>
+
+      <div id="signup-form" class="auth-form">
+        <h3>新規登録</h3>
+        <p class="auth-hint">新しいアカウントを作成</p>
+        <input type="text" id="signupUsername" placeholder="ユーザー名 (1〜20文字、スペース以外は自由)" maxlength="20">
+        <input type="password" id="signupPassword" placeholder="パスワード (4文字以上)">
+        <input type="password" id="signupPasswordConfirm" placeholder="パスワード (確認)">
+        <button id="signupButton">アカウント作成</button>
+        <div class="auth-toggle">
+          既にアカウントがありますか？ <a id="showLogin">ログイン</a>
+        </div>
+      </div>
+
+      <div id="auth-error" class="error-message hidden"></div>
+      <div id="auth-success" class="success-message hidden"></div>
+    </div>
+  </div>
+
+  <div id="chat-section" class="hidden">
+    <div id="new-message-notice" class="hidden">🍫新着メッセージがあります🍫</div>
+    <div class="chat-header">
+      <h1>🍫choco-chat🍫</h1>
+      <h2>🍫ベータ版です。改善点あったら教えて🍫</h2>
+    </div>
+
+    <div class="user-info-display">
+      🍫ログイン中: <span class="display-name" id="current-display-name"></span>
+      <span id="admin-indicator" class="hidden" style="background: #e74c3c; color: white; padding: 2px 8px; border-radius: 4px; margin-left: 8px; font-size: 12px;">管理者</span>
+    </div>
+
+    <div class="online-info">
+      <span>オンライン:</span>
+      <span id="user-count">0人</span>
+      <span id="user-names"></span>
+    </div>
+
+    <div id="typing-indicator" class="hidden"></div>
+
+    <div id="chat-box"></div>
+
+    <div id="reply-preview" class="hidden">
+      <span id="reply-to-text"></span>
+      <button id="cancel-reply">✕</button>
+    </div>
+
+    <div class="input-area">
+      <textarea id="message-input" maxlength="200" placeholder="メッセージを入力...　　　　（ご自由にどうぞ）"></textarea>
+      <div class="input-controls">
+        <div class="input-hint">Enterで送信 / Shift+Enter または Space+Enterで改行</div>
+        <div class="char-count"><span id="char-counter">0</span>/200</div>
+      </div>
+      <div class="button-row">
+        <button id="send-btn">送信</button>
+        <button id="omikuji-btn" style="background-color: #e67e22; color: #fff; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; transition: background-color 0.3s ease, transform 0.2s ease; font-size: 14px; font-weight: bold; height: 40px; display: flex; align-items: center; justify-content: center;">おみくじ</button>
+        <button id="toggle-system-messages">入退室通知: 表示</button>
+        <div class="logout-container">
+          <button id="logoutButton">ログアウト</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="privileged-admin-controls" class="hidden">
+      <div class="button-row" style="margin-bottom: 10px;">
+        <button id="toggleIpListBtn" class="toggle-ip-btn">オンラインユーザーIPを表示</button>
+        <button id="toggleIpHistoryBtn" class="toggle-ip-btn">全ユーザーIP履歴を表示</button>
+      </div>
+    </div>
+
+    <div id="user-ip-list" class="hidden">
+      <h4>【特権管理者専用】オンラインユーザーIPリスト</h4>
+      <div id="ip-list-content"></div>
+    </div>
+
+    <div id="user-ip-history" class="hidden">
+      <h4>【特権管理者専用】全ユーザーIP履歴</h4>
+      <div id="ip-history-content"></div>
+    </div>
+
+    <div id="command-summary">
+      <h3>コマンド</h3>
+      <div class="command-grid">
+        <div class="command-item">
+          <div class="command-name">/prm</div>
+          <div class="command-desc">プライベートメッセージを送る</div>
+          <div class="command-example">例: /prm ユーザー名 内容</div>
+        </div>
+        <div class="command-item admin-only">
+          <div class="command-name">/delete<span class="admin-badge">管理者専用</span></div>
+          <div class="command-desc">全メッセージを削除</div>
+        </div>
+        <div class="command-item admin-only">
+          <div class="command-name">/mute<span class="admin-badge">管理者専用</span></div>
+          <div class="command-desc">ユーザーを一時的にミュート</div>
+          <div class="command-example">例: /mute ユーザー名 60</div>
+        </div>
+        <div class="command-item admin-only">
+          <div class="command-name">/unmute<span class="admin-badge">管理者専用</span></div>
+          <div class="command-desc">ミュートを解除します</div>
+          <div class="command-example">例: /unmute ユーザー名</div>
+        </div>
+        <div class="command-item admin-only">
+          <div class="command-name">/ban<span class="admin-badge">管理者専用</span></div>
+          <div class="command-desc">ユーザーをチャットから追い出す</div>
+          <div class="command-example">例: /ban ユーザー名</div>
+        </div>
+        <div class="command-item admin-only">
+          <div class="command-name">/unban<span class="admin-badge">管理者専用</span></div>
+          <div class="command-desc">BANを解除します</div>
+          <div class="command-example">例: /unban ユーザー名</div>
+        </div>
+        <div class="command-item privileged-admin-only">
+          <div class="command-name">/ipban<span class="admin-badge" style="background: #9b59b6;">特権管理者専用</span></div>
+          <div class="command-desc">ユーザー名またはIPアドレスでBANする</div>
+          <div class="command-example">例: /ipban ユーザー名 または /ipban 192.168.1.1</div>
+        </div>
+        <div class="command-item privileged-admin-only">
+          <div class="command-name">/ipunban<span class="admin-badge" style="background: #9b59b6;">特権管理者専用</span></div>
+          <div class="command-desc">IPバンを解除する</div>
+          <div class="command-example">例: /ipunban IPアドレス</div>
+        </div>
+        <div class="command-item privileged-admin-only">
+          <div class="command-name">/ipbanlist<span class="admin-badge" style="background: #9b59b6;">特権管理者専用</span></div>
+          <div class="command-desc">IPバンリストを表示</div>
+        </div>
+      </div>
+      </div>
+
+    <div id="profile-settings">
+      <h3>設定</h3>
+      <div class="profile-row">
+        <label>名前の色:</label>
+        <input type="color" id="nameColor" value="#000000" title="名前の色">
+      </div>
+      <div class="profile-row">
+        <label>ステータス:</label>
+        <input type="text" id="statusText" placeholder="ステータス文章 (最大30文字)" maxlength="30" style="width: 200px;">
+      </div>
+      <div class="profile-row">
+        <label>テーマ:</label>
+        <select id="themeSelect">
+          <option value="default">デフォルト</option>
+          <option value="dark">ダーク</option>
+          <option value="light">ライト</option>
+          <option value="blue">ブルー</option>
+        </select>
+      </div>
+      <div class="profile-row">
+        <button id="updateProfileButton">更新</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="edit-modal" class="modal hidden">
+    <div class="modal-content">
+      <h3>メッセージを編集</h3>
+      <textarea id="edit-message-input"></textarea>
+      <div class="modal-buttons">
+        <button id="save-edit-btn">保存</button>
+        <button id="cancel-edit-btn">キャンセル</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script>
+    function getServerUrl() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const serverParam = urlParams.get('server');
+      if (serverParam) return serverParam;
+      if (window.CHAT_SERVER_URL) return window.CHAT_SERVER_URL;
+      return window.location.origin;
+    }
+
+    const socket = io(getServerUrl(), {
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      timeout: 20000
+    });
+
+    socket.on('connect_error', (error) => {
+      console.error('Connection Error:', error);
+    });
+
+    socket.on('disconnect', (reason) => {
+      console.warn('Disconnected:', reason);
+      if (reason === 'io server disconnect' || reason === 'transport close' || reason === 'transport error') {
+        socket.connect();
+      }
+    });
+
+    const authSection = document.getElementById('auth-section');
+    const chatSection = document.getElementById('chat-section');
+    let currentUser = null;
+    let currentProfile = null;
+    let isAdmin = false;
+    let isPrivilegedAdmin = false;
+    const PRIVILEGED_ADMIN_USERS = ['ばなな', 'ばななの左腕', 'チョコわかめ', 'ばななの右腕', 'woolisbest', 'woolisbest#plus', 'メル#1'];
+    let replyToMessage = null;
+    let editingMessageId = null;
+    let openMenuId = null;
+    let userStatusMap = {};
+    let spacePressed = false;
+    let showSystemMessages = true;
+
+    const savedToken = localStorage.getItem('chatToken');
+    if (savedToken) {
+      socket.emit('tokenLogin', { token: savedToken }, (response) => {
+        if (response && response.success) {
+          handleLoginSuccess(response);
+        } else {
+          localStorage.removeItem('chatToken');
+          localStorage.removeItem('chatDisplayName');
+        }
+      });
+    }
+
+    const loginForm = document.getElementById('login-form');
+    const signupForm = document.getElementById('signup-form');
+    const authError = document.getElementById('auth-error');
+    const authSuccess = document.getElementById('auth-success');
+    const chatBox = document.getElementById('chat-box');
+    const messageInput = document.getElementById('message-input');
+    const sendBtn = document.getElementById('send-btn');
+    const omikujiBtn = document.getElementById('omikuji-btn');
+    const charCounter = document.getElementById('char-counter');
+
+    messageInput.addEventListener('input', () => {
+      const length = messageInput.value.length;
+      charCounter.textContent = length;
+      if (length > 320) {
+        charCounter.style.color = '#e74c3c';
+        sendBtn.disabled = true;
+      } else {
+        charCounter.style.color = '';
+        sendBtn.disabled = false;
+      }
+    });
+    omikujiBtn.addEventListener('click', () => {
+      messageInput.value = '/omi';
+      sendBtn.click();
+    });
+
+    const userCount = document.getElementById('user-count');
+    const userNames = document.getElementById('user-names');
+    const typingIndicator = document.getElementById('typing-indicator');
+    const replyPreview = document.getElementById('reply-preview');
+    const replyToText = document.getElementById('reply-to-text');
+    const cancelReplyBtn = document.getElementById('cancel-reply');
+    const editModal = document.getElementById('edit-modal');
+    const editMessageInput = document.getElementById('edit-message-input');
+    const themeSelect = document.getElementById('themeSelect');
+
+    let typingTimeout;
+    let heartbeatInterval;
+
+    document.getElementById('showSignup').addEventListener('click', () => {
+      loginForm.classList.remove('active');
+      signupForm.classList.add('active');
+      hideMessages();
+    });
+
+    document.getElementById('showLogin').addEventListener('click', () => {
+      signupForm.classList.remove('active');
+      loginForm.classList.add('active');
+      hideMessages();
+    });
+
+    document.getElementById('adminLoginCheck').addEventListener('change', (e) => {
+      const container = document.getElementById('adminPasswordContainer');
+      if (e.target.checked) {
+        container.classList.remove('hidden');
+      } else {
+        container.classList.add('hidden');
+        document.getElementById('adminPassword').value = '';
+      }
+    });
+
+    function hideMessages() {
+      authError.classList.add('hidden');
+      authSuccess.classList.add('hidden');
+    }
+
+    function showAuthError(message, dbError = null) {
+      authSuccess.classList.add('hidden');
+      if (dbError) {
+        authError.innerHTML = `
+          <div style="font-weight: bold; margin-bottom: 10px;">${message}</div>
+          <div style="margin-bottom: 8px;"><strong>原因:</strong> ${dbError.cause || '不明'}</div>
+          <div style="background: #fff3cd; color: #856404; padding: 10px; border-radius: 6px; margin-top: 10px;">
+            <strong>解決方法:</strong><br>${dbError.solution || '管理者に連絡してください'}
+          </div>
+        `;
+      } else {
+        authError.textContent = message;
+      }
+      authError.style.background = '#fdeaea';
+      authError.style.color = '#e74c3c';
+      authError.classList.remove('hidden');
+    }
+  </script>
+
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <!-- JavaScript Files -->
+  <script src="js/auth.js"></script>
+  <script src="js/messages.js"></script>
+  <script src="js/private.js"></script>
+  <script src="js/admin.js"></script>
+  <script src="js/chat.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
