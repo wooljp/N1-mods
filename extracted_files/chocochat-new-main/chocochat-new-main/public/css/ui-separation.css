@@ -1,0 +1,382 @@
+/* UI Separation Styles */
+
+/* Admin page specific styles */
+body.admin-show #admin-panel {
+  display: block !important;
+}
+
+body.admin-show #admin-input {
+  display: block !important;
+}
+
+body.privileged-admin-show #admin-panel {
+  display: block !important;
+}
+
+body.privileged-admin-show #privileged-admin-input {
+  display: block !important;
+}
+
+body.privileged-admin-show #ip-controls {
+  display: block !important;
+}
+
+/* Hide regular user input on admin page */
+body.admin-show #regular-user-input,
+body.privileged-admin-show #regular-user-input {
+  display: none !important;
+}
+
+/* User Role Indicators */
+#admin-indicator {
+  background: #e74c3c;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-left: 8px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+#privileged-admin-indicator {
+  background: #8e44ad;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-left: 8px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* Input Area Separation */
+.input-area {
+  padding: 20px;
+  background: white;
+  border-top: 1px solid #ccc;
+  position: sticky;
+  bottom: 0;
+}
+
+#admin-input {
+  background: #f8f9fa;
+  border-top: 2px solid #e74c3c;
+}
+
+#privileged-admin-input {
+  background: #f4f1f8;
+  border-top: 2px solid #8e44ad;
+}
+
+/* Theme-specific input areas */
+.theme-dark #regular-user-input {
+  background: #333;
+  border-top-color: #444;
+}
+
+.theme-dark #admin-input {
+  background: #3a3447;
+  border-top-color: #8e44ad;
+}
+
+.theme-dark #privileged-admin-input {
+  background: #4a3d5a;
+  border-top-color: #9b59b6;
+}
+
+/* Button styling for different user types */
+#send-btn, #send-btn-admin, #send-btn-privileged {
+  padding: 15px 30px;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.1s;
+}
+
+#send-btn-admin {
+  background: #e74c3c;
+}
+
+#send-btn-privileged {
+  background: #8e44ad;
+}
+
+#send-btn:hover {
+  background: #2980b9;
+}
+
+#send-btn-admin:hover {
+  background: #c0392b;
+}
+
+#send-btn-privileged:hover {
+  background: #7d3c98;
+}
+
+/* Omikuji buttons */
+#omikuji-btn, #omikuji-btn-admin, #omikuji-btn-privileged {
+  background-color: #e67e22;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  font-size: 14px;
+  font-weight: bold;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#omikuji-btn-admin {
+  background-color: #d35400;
+}
+
+#omikuji-btn-privileged {
+  background-color: #a04000;
+}
+
+/* Admin panel visibility */
+#admin-panel {
+  position: fixed;
+  top: 80px;
+  left: 20px;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  z-index: 100;
+  min-width: 300px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+/* IP Controls styling */
+#ip-controls {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  z-index: 99;
+}
+
+/* IP List and History styling */
+#user-ip-list, #user-ip-history {
+  position: fixed;
+  top: 140px;
+  right: 20px;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  z-index: 98;
+  max-width: 400px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+#user-ip-list h4, #user-ip-history h4 {
+  margin: 0 0 10px 0;
+  color: #8e44ad;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+/* Button row adjustments */
+.button-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+#admin-input .button-row,
+#privileged-admin-input .button-row {
+  gap: 8px;
+}
+
+/* Logout container */
+.logout-container {
+  margin-left: auto;
+}
+
+/* Message input styling */
+#message-input, #message-input-admin, #message-input-privileged {
+  flex: 1;
+  padding: 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 16px;
+  resize: none;
+  transition: border-color 0.3s;
+}
+
+#message-input-admin {
+  border-color: #e74c3c;
+}
+
+#message-input-privileged {
+  border-color: #8e44ad;
+}
+
+#message-input:focus, #message-input-admin:focus, #message-input-privileged:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+#message-input-admin:focus {
+  border-color: #c0392b;
+}
+
+#message-input-privileged:focus {
+  border-color: #7d3c98;
+}
+
+/* Theme-specific message inputs */
+.theme-dark #message-input, 
+.theme-dark #message-input-admin, 
+.theme-dark #message-input-privileged {
+  background: #444;
+  color: #ddd;
+  border-color: #555;
+}
+
+.theme-dark #message-input-admin {
+  border-color: #8e44ad;
+}
+
+.theme-dark #message-input-privileged {
+  border-color: #9b59b6;
+}
+
+/* Admin-specific UI elements */
+.admin-only, .privileged-admin-only {
+  display: none;
+}
+
+.admin-show .admin-only {
+  display: block;
+}
+
+.privileged-admin-show .privileged-admin-only {
+  display: block;
+}
+
+/* User type specific styling */
+.regular-user-show #regular-user-input {
+  display: block;
+}
+
+.admin-show #regular-user-input {
+  display: none;
+}
+
+.admin-show #admin-input {
+  display: block;
+}
+
+.privileged-admin-show #regular-user-input,
+.privileged-admin-show #admin-input {
+  display: none;
+}
+
+.privileged-admin-show #privileged-admin-input {
+  display: block;
+}
+
+/* Hide all input areas by default, show based on user type */
+#admin-input, #privileged-admin-input {
+  display: none;
+}
+
+/* Admin page specific header styling */
+body.admin-show .chat-header h1,
+body.privileged-admin-show .chat-header h1 {
+  color: #e74c3c;
+}
+
+body.privileged-admin-show .chat-header h1 {
+  color: #8e44ad;
+}
+
+/* Admin page specific auth styling */
+body.admin-show .auth-container h1 {
+  color: #e74c3c;
+}
+
+body.privileged-admin-show .auth-container h1 {
+  color: #8e44ad;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  #admin-panel {
+    position: static;
+    margin: 20px;
+    left: auto;
+    top: auto;
+    max-height: none;
+  }
+  
+  #ip-controls {
+    position: static;
+    margin: 20px;
+    right: auto;
+    top: auto;
+  }
+  
+  #user-ip-list, #user-ip-history {
+    position: static;
+    margin: 20px;
+    right: auto;
+    top: auto;
+    max-width: none;
+  }
+  
+  .button-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .button-row button {
+    width: 100%;
+  }
+  
+  .logout-container {
+    margin-left: 0;
+    margin-top: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .input-area {
+    padding: 15px;
+  }
+  
+  #message-input, #message-input-admin, #message-input-privileged {
+    padding: 12px;
+    font-size: 14px;
+  }
+  
+  .button-row button {
+    padding: 12px 20px;
+    font-size: 14px;
+  }
+  
+  #admin-panel {
+    margin: 10px;
+    padding: 15px;
+    min-width: auto;
+  }
+}

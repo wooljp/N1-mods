@@ -1,0 +1,366 @@
+/* Private Message Styles */
+
+#private-messages-container {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  width: 350px;
+  height: 500px;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  z-index: 100;
+  display: none;
+  flex-direction: column;
+}
+
+#private-messages-container.active {
+  display: flex;
+}
+
+.private-messages-header {
+  background: #9b59b6;
+  color: white;
+  padding: 15px;
+  border-radius: 8px 8px 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.private-messages-title {
+  font-weight: bold;
+  font-size: 16px;
+  margin: 0;
+}
+
+.close-private-messages {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.close-private-messages:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+.private-messages-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 15px;
+  background: #f9f9f9;
+}
+
+.private-message-container {
+  margin-bottom: 15px;
+  padding: 10px;
+  border-radius: 8px;
+  background: white;
+  border-left: 4px solid #9b59b6;
+  animation: fadeIn 0.3s ease;
+}
+
+.private-message-container.sent {
+  border-left-color: #3498db;
+  background: #e3f2fd;
+}
+
+.private-message-container.received {
+  border-left-color: #2ecc71;
+  background: #e8f5e8;
+}
+
+.private-message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.private-message-sender {
+  font-weight: bold;
+  color: #333;
+  font-size: 14px;
+}
+
+.private-message-time {
+  font-size: 12px;
+  color: #888;
+}
+
+.private-message-text {
+  white-space: pre-wrap;
+  font-size: 14px;
+  line-height: 1.4;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.private-message-actions {
+  margin-top: 8px;
+  text-align: right;
+}
+
+.private-message-delete {
+  background: none;
+  border: none;
+  color: #e74c3c;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  transition: background-color 0.2s;
+}
+
+.private-message-delete:hover {
+  background: rgba(231, 76, 60, 0.1);
+}
+
+/* Private Message Input */
+.private-message-input-container {
+  padding: 15px;
+  border-top: 1px solid #ccc;
+  background: white;
+  border-radius: 0 0 8px 8px;
+}
+
+.private-message-to {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.private-message-to label {
+  font-size: 14px;
+  color: #666;
+  font-weight: bold;
+}
+
+.private-message-to input {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.private-message-to input:focus {
+  outline: none;
+  border-color: #9b59b6;
+}
+
+.private-message-input-wrapper {
+  display: flex;
+  gap: 10px;
+}
+
+.private-message-input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 14px;
+  resize: none;
+  min-height: 40px;
+  max-height: 100px;
+}
+
+.private-message-input:focus {
+  outline: none;
+  border-color: #9b59b6;
+}
+
+.private-message-send {
+  padding: 10px 20px;
+  background: #9b59b6;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.private-message-send:hover {
+  background: #8e44ad;
+}
+
+.private-message-send:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+}
+
+/* Private Message User List */
+.private-user-list {
+  max-height: 150px;
+  overflow-y: auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  background: white;
+}
+
+.private-user-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-size: 14px;
+}
+
+.private-user-item:hover {
+  background: #f5f5f5;
+}
+
+.private-user-item:last-child {
+  border-bottom: none;
+}
+
+.private-user-name {
+  font-weight: bold;
+  color: #333;
+}
+
+.private-user-status {
+  font-size: 12px;
+  color: #888;
+}
+
+.private-user-status.online {
+  color: #27ae60;
+}
+
+.private-user-status.offline {
+  color: #e74c3c;
+}
+
+/* Private Message Notifications */
+.private-message-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #9b59b6;
+  color: white;
+  padding: 15px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  z-index: 1002;
+  cursor: pointer;
+  font-weight: bold;
+  animation: slideInRight 0.3s ease;
+  max-width: 300px;
+}
+
+.private-message-notification:hover {
+  background: #8e44ad;
+}
+
+/* Private Message Empty State */
+.private-messages-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #888;
+  font-style: italic;
+}
+
+.private-messages-empty i {
+  font-size: 48px;
+  margin-bottom: 15px;
+  display: block;
+  opacity: 0.5;
+}
+
+/* Responsive Private Messages */
+@media (max-width: 768px) {
+  #private-messages-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    height: auto;
+    border-radius: 0;
+  }
+  
+  .private-messages-header {
+    border-radius: 0;
+  }
+  
+  .private-messages-content {
+    padding: 10px;
+  }
+  
+  .private-message-container {
+    padding: 8px;
+    margin-bottom: 10px;
+  }
+  
+  .private-message-input-container {
+    padding: 10px;
+  }
+  
+  .private-message-to {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 5px;
+  }
+  
+  .private-message-input-wrapper {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .private-message-send {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .private-messages-header {
+    padding: 12px 15px;
+  }
+  
+  .private-messages-title {
+    font-size: 14px;
+  }
+  
+  .private-message-container {
+    padding: 6px;
+    margin-bottom: 8px;
+  }
+  
+  .private-message-sender {
+    font-size: 13px;
+  }
+  
+  .private-message-text {
+    font-size: 13px;
+  }
+  
+  .private-message-input {
+    font-size: 13px;
+    padding: 8px;
+  }
+  
+  .private-message-send {
+    padding: 8px 15px;
+    font-size: 13px;
+  }
+}
